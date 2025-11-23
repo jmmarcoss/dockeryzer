@@ -97,24 +97,27 @@ func getFallbackDockerfile(tech *ProjectTechnology, ignoreComments bool) string 
 }
 
 func getDockerfileContent(ignoreComments bool) string {
-	// Detectar tecnologias do projeto
-	tech := DetectProject()
+	// Use the embedded API key
+	apiKey := config.APIKey
+	if apiKey == "" {
+		log.Fatal("API key not set in binary. Please rebuild with -ldflags")
+	}
+
+	// Detectar tecnologias do projeto (heurística + AI se necessário)
+	tech := DetectProjectSmart(apiKey)
 
 	fmt.Printf("🔍 Detected: %s", tech.Language)
 	if tech.Framework != "" {
 		fmt.Printf(" (%s)", tech.Framework)
+	}
+	if tech.PackageManager != "" {
+		fmt.Printf(" [%s]", tech.PackageManager)
 	}
 	fmt.Println()
 
 	// Generate AI prompt
 	systemPrompt := "You are a Docker expert. Respond only with Dockerfile content, no explanations."
 	userPrompt := generateAIPrompt(tech, ignoreComments)
-
-	// Use the embedded API key
-	apiKey := config.APIKey
-	if apiKey == "" {
-		log.Fatal("API key not set in binary. Please rebuild with -ldflags")
-	}
 
 	fmt.Println("🤖 AI is analyzing your project and generating a Dockerfile...")
 
@@ -334,6 +337,7 @@ RUN chown -R www-data:www-data /var/www/html
 CMD ["apache2-foreground"]
 `
 }
+
 func getRubyDockerfileContent(tech *ProjectTechnology, ignoreComments bool) string {
 	if tech.Framework == "rails" {
 		return `FROM ruby:3.2-alpine
@@ -400,6 +404,121 @@ CMD ["npx", "serve", "-p", "3000", "-s", "/app"]
 
 # Example: docker run -p 3000:3000 image-name
 `
+}
+
+// DetectProjectWithAI usa LLM quando heurística falha
+func DetectProjectWithAI(tech *ProjectTechnology, apiKey string) error {
+	// Se já detectamos tudo, não precisa de AI
+	if tech.Language != "unknown" && tech.Language != "" {
+		return nil
+	}
+
+	fmt.Println("🤖 Using AI to detect project technology...")
+
+	// Preparar contexto para a AI
+	dataTemplate := map[string]interface{}{
+		"rootFiles":      tech.RootFiles,
+		"configFiles":    tech.ConfigFiles,
+		"fileExtensions": tech.FileExtensions,
+	}
+
+	contextJson, _ := json.MarshalIndent(dataTemplate, "", "  ")
+
+	prompt := fmt.Sprintf(`Analyze the following project structure and identify:
+1. Primary programming language
+2. Framework (if any)
+3. Package manager
+4. Build tool (if any)
+
+Project information:
+%s
+
+Respond ONLY with a JSON object in this exact format:
+{
+  "language": "language-name",
+  "framework": "framework-name",
+  "packageManager": "package-manager-name",
+  "buildTool": "build-tool-name"
+}
+
+Use lowercase for all values. If something is not detected, use empty string.`, string(contextJson))
+
+	// Criar provedor AI
+	providerConfig := ai.ProviderConfig{
+		Type:   ai.ProviderGemini,
+		APIKey: apiKey,
+		Model:  "",
+	}
+
+	provider, err := ai.NewAIProvider(providerConfig)
+	if err != nil {
+		return fmt.Errorf("failed to create AI provider: %w", err)
+	}
+	defer provider.Close()
+
+	ctx := context.Background()
+	response, err := provider.GenerateContent(ctx, "You are a project analysis expert. Always respond with valid JSON only.", prompt, 0.1)
+	if err != nil {
+		return fmt.Errorf("failed to generate content: %w", err)
+	}
+
+	// Parse resposta JSON
+	response = strings.TrimSpace(response)
+	response = strings.TrimPrefix(response, "```json")
+	response = strings.TrimPrefix(response, "```")
+	response = strings.TrimSuffix(response, "```")
+	response = strings.TrimSpace(response)
+
+	var aiResult struct {
+		Language       string `json:"language"`
+		Framework      string `json:"framework"`
+		PackageManager string `json:"packageManager"`
+		BuildTool      string `json:"buildTool"`
+	}
+
+	if err := json.Unmarshal([]byte(response), &aiResult); err != nil {
+		return fmt.Errorf("failed to parse AI response: %w", err)
+	}
+
+	// Atualizar tecnologia detectada
+	if aiResult.Language != "" {
+		tech.Language = aiResult.Language
+	}
+	if aiResult.Framework != "" {
+		tech.Framework = aiResult.Framework
+	}
+	if aiResult.PackageManager != "" {
+		tech.PackageManager = aiResult.PackageManager
+	}
+	if aiResult.BuildTool != "" {
+		tech.BuildTool = aiResult.BuildTool
+	}
+
+	fmt.Printf("✅ AI detected: %s", tech.Language)
+	if tech.Framework != "" {
+		fmt.Printf(" (%s)", tech.Framework)
+	}
+	fmt.Println()
+
+	return nil
+}
+
+// DetectProjectSmart usa heurística primeiro, AI como fallback
+func DetectProjectSmart(apiKey string) *ProjectTechnology {
+	tech := DetectProject()
+
+	// Se linguagem não detectada ou desconhecida, usar AI
+	if tech.Language == "unknown" || tech.Language == "" {
+		if apiKey != "" {
+			fmt.Println("⚠️  Could not detect project type automatically")
+			err := DetectProjectWithAI(tech, apiKey)
+			if err != nil {
+				fmt.Printf("⚠️  AI detection failed: %v\n", err)
+			}
+		}
+	}
+
+	return tech
 }
 
 func getGenericDockerfileContent(ignoreComments bool) string {

@@ -1,3 +1,4 @@
+// File: src/utils/detector.go
 package utils
 
 import (
@@ -149,10 +150,6 @@ func ShowProjectInfo(useAI bool) {
 
 	fmt.Println("========================================\n")
 }
-
-// func DetectProjectSmart(apiKey string) {
-// 	panic("unimplemented")
-// }
 
 // analyzeFileExtensions percorre recursivamente o projeto
 func analyzeFileExtensions() FileExtensionStats {
@@ -599,6 +596,7 @@ func GetRootFiles() []string {
 }
 
 // Funções mantidas para compatibilidade (deprecated)
+
 func hasPackageJson() bool {
 	return fileExists("package.json")
 }
