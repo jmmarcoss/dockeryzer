@@ -48,6 +48,9 @@ notes.txt
 TODO.md
 *.log
 
+# Binary
+dockeryzer
+
 # Generated Dockerfiles
 *.Dockerfile
 Dockeryzer.Dockerfile
