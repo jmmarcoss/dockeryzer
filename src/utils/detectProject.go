@@ -148,7 +148,7 @@ func ShowProjectInfo(useAI bool) {
 		}
 	}
 
-	fmt.Println("========================================\n")
+	fmt.Println("========================================")
 }
 
 // analyzeFileExtensions percorre recursivamente o projeto

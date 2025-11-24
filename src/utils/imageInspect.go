@@ -182,7 +182,7 @@ func DebugImageInfo(imageInspect types.ImageInspect) {
 	fmt.Println("\nImage Architecture:", imageInspect.Architecture)
 	fmt.Println("Image OS:", imageInspect.Os)
 
-	fmt.Println("\n=== END DEBUG ===\n")
+	fmt.Println("\n=== END DEBUG ===")
 }
 
 func PrintImageCompareResults(name string, imageInspect types.ImageInspect) {
