@@ -2,6 +2,7 @@ package functions
 
 import (
 	"fmt"
+
 	"github.com/jorgevvs2/dockeryzer/src/utils"
 )
 
@@ -17,5 +18,5 @@ func Compare(image1, image2 string) {
 	fmt.Println("Differences:")
 	utils.PrintImageCompareLayersResults(image1, image1Inspect, image2, image2Inspect)
 	utils.PrintImageCompareSizeResults(image1, image1Inspect, image2, image2Inspect)
-	utils.PrintImageCompareNodeJsResults(image1, image1Inspect, image2, image2Inspect)
+	//utils.PrintImageCompareNodeJsResults(image1, image1Inspect, image2, image2Inspect)
 }

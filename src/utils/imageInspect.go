@@ -2,17 +2,14 @@ package utils
 
 import (
 	"fmt"
-	"github.com/docker/docker/api/types"
 	"math"
-	"os"
-	"strconv"
-	"strings"
 	"time"
+
+	"github.com/docker/docker/api/types"
 )
 
 func GetImageSizeInMBs(imageInspect types.ImageInspect) float32 {
 	sizeInMbs := float32(imageInspect.Size) / float32(math.Pow(10.0, 6))
-
 	return sizeInMbs
 }
 
@@ -53,67 +50,19 @@ func GetImageAuthor(imageInspect types.ImageInspect) string {
 	return imageInspect.Author
 }
 
-const nodeVersionNoIdentified = "<no-identified>"
-
-func GetImageNodeJsVersionString(imageInspect types.ImageInspect) string {
-	envVars := imageInspect.Config.Env
-	nodeVersion := nodeVersionNoIdentified
-
-	for _, envVar := range envVars {
-		if strings.Contains(envVar, "NODE_VERSION") {
-			nodeVersion = strings.Split(envVar, "=")[1]
-			break
-		}
-	}
-	return nodeVersion
-}
-
-func GetImageNodeJsMajorVersionNumber(imageInspect types.ImageInspect) int {
-	nodeVersion := GetImageNodeJsVersionString(imageInspect)
-	if nodeVersion == nodeVersionNoIdentified {
-		return 0
-	}
-	num, err := strconv.Atoi(strings.Split(nodeVersion, ".")[0])
-	if err != nil {
-		fmt.Println("Failed to retrieve Node.js major version number", err)
-		os.Exit(1)
-	}
-	return num
-}
-
-func GetImageNodeJsVersionWithColor(imageInspect types.ImageInspect) string {
-	nodeJsMajorVersion := GetImageNodeJsMajorVersionNumber(imageInspect)
-	nodeJsVersionString := GetImageNodeJsVersionString(imageInspect)
-
-	fmt.Printf("  - Node.js version: ")
-	if nodeJsMajorVersion < 14 {
-		return ErrorSprintf(nodeJsVersionString)
-
-	}
-	if nodeJsMajorVersion >= 14 && nodeJsMajorVersion <= 16 {
-		return WarningSprintf(nodeJsVersionString)
-
-	}
-
-	return SuccessSprintf(nodeJsVersionString)
-}
-
 func GetImageSizeWithColor(imageInspect types.ImageInspect) string {
 	sizeInMBs := GetImageSizeInMBs(imageInspect)
 
 	fmt.Printf("  - Size: ")
 	if sizeInMBs < 250 {
 		return SuccessSprintf("%s", GetImageSizeString(imageInspect))
-
 	}
 
 	if sizeInMBs >= 250 && sizeInMBs <= 500 {
 		return WarningSprintf("%s", GetImageSizeString(imageInspect))
-
 	}
 
 	return ErrorSprintf("%s", GetImageSizeString(imageInspect))
-
 }
 
 func GetImageLayersWithColor(imageInspect types.ImageInspect) string {
@@ -122,16 +71,13 @@ func GetImageLayersWithColor(imageInspect types.ImageInspect) string {
 	fmt.Printf("  - N. of Layers: ")
 	if numberOfLayers < 10 {
 		return SuccessSprintf("%d", numberOfLayers)
-
 	}
 
 	if numberOfLayers >= 10 && numberOfLayers <= 20 {
 		return WarningSprintf("%d", numberOfLayers)
-
 	}
 
 	return ErrorSprintf("%d", numberOfLayers)
-
 }
 
 func PrintImageResults(name string, imageInspect types.ImageInspect, minimal bool, ignoreSuggestions bool) {
@@ -140,7 +86,10 @@ func PrintImageResults(name string, imageInspect types.ImageInspect, minimal boo
 	fmt.Printf("  - Tags: %s\n", imageInspect.RepoTags)
 	fmt.Println(GetImageSizeWithColor(imageInspect))
 	fmt.Println(GetImageLayersWithColor(imageInspect))
-	fmt.Println(GetImageNodeJsVersionWithColor(imageInspect))
+
+	// Nova função para detectar a linguagem principal
+	PrintLanguageWithColor(imageInspect)
+
 	if !minimal {
 		fmt.Printf("  - Author: %s\n", GetImageAuthor(imageInspect))
 		fmt.Printf("  - Creation date: %s\n", GetImageFormattedCreationDate(imageInspect))
@@ -149,13 +98,12 @@ func PrintImageResults(name string, imageInspect types.ImageInspect, minimal boo
 
 	sizeInMBs := GetImageSizeInMBs(imageInspect)
 	numberOfLayers := GetImageNumberOfLayers(imageInspect)
-	nodeJsMajorVersion := GetImageNodeJsMajorVersionNumber(imageInspect)
+	hasOutdatedLanguage := HasOutdatedLanguage(imageInspect)
 
 	isBigImage := sizeInMBs > 250
 	hasManyLayers := numberOfLayers > 10
-	isOutdatedNodeVersion := nodeJsMajorVersion < 16
 
-	shouldShowSuggestions := isBigImage || hasManyLayers || isOutdatedNodeVersion
+	shouldShowSuggestions := isBigImage || hasManyLayers || hasOutdatedLanguage
 
 	if ignoreSuggestions {
 		return
@@ -173,17 +121,68 @@ func PrintImageResults(name string, imageInspect types.ImageInspect, minimal boo
 		fmt.Println("  - Your image has multiple layers. Consider applying a multi-build stage strategy or combining commands to reduce the number of layers.")
 	}
 
-	if isOutdatedNodeVersion {
-		if nodeJsMajorVersion == 0 {
-			fmt.Println("  - No Node.js version detected. Ensure that your image is created correctly and includes a valid Node.js installation.")
-		} else {
-			fmt.Println("  - An outdated Node.js version is detected. It's recommended to use the latest version to ensure the security of your image.")
-		}
+	// Sugestões específicas por linguagem
+	languageSuggestions := GetLanguageImprovementSuggestions(imageInspect)
+	for _, suggestion := range languageSuggestions {
+		fmt.Println(suggestion)
+	}
+
+	// Se nenhuma linguagem foi detectada
+	lang := DetectPrimaryLanguage(imageInspect)
+	if lang == nil && !ignoreSuggestions && shouldShowSuggestions {
+		fmt.Println("  - No programming language runtime detected. Ensure your image is configured correctly if it requires a runtime environment.")
 	}
 }
 
 func PrintImageAnalyzeResults(name string, imageInspect types.ImageInspect) {
 	PrintImageResults(name, imageInspect, false, false)
+}
+
+func DebugImageInfo(imageInspect types.ImageInspect) {
+	fmt.Println("\n=== DEBUG IMAGE INFO ===")
+
+	fmt.Println("\nEnvironment Variables:")
+	if len(imageInspect.Config.Env) == 0 {
+		fmt.Println("  (empty)")
+	} else {
+		for i, env := range imageInspect.Config.Env {
+			fmt.Printf("  [%d] %s\n", i, env)
+		}
+	}
+
+	fmt.Println("\nCmd:")
+	if len(imageInspect.Config.Cmd) == 0 {
+		fmt.Println("  (empty)")
+	} else {
+		for i, cmd := range imageInspect.Config.Cmd {
+			fmt.Printf("  [%d] %s\n", i, cmd)
+		}
+	}
+
+	fmt.Println("\nEntrypoint:")
+	if len(imageInspect.Config.Entrypoint) == 0 {
+		fmt.Println("  (empty)")
+	} else {
+		for i, ep := range imageInspect.Config.Entrypoint {
+			fmt.Printf("  [%d] %s\n", i, ep)
+		}
+	}
+
+	fmt.Printf("\nWorking Directory: %s\n", imageInspect.Config.WorkingDir)
+
+	fmt.Println("\nLabels:")
+	if len(imageInspect.Config.Labels) == 0 {
+		fmt.Println("  (empty)")
+	} else {
+		for key, value := range imageInspect.Config.Labels {
+			fmt.Printf("  %s = %s\n", key, value)
+		}
+	}
+
+	fmt.Println("\nImage Architecture:", imageInspect.Architecture)
+	fmt.Println("Image OS:", imageInspect.Os)
+
+	fmt.Println("\n=== END DEBUG ===\n")
 }
 
 func PrintImageCompareResults(name string, imageInspect types.ImageInspect) {
@@ -280,40 +279,68 @@ func PrintImageCompareSizeResults(image1 string, image1Inspect types.ImageInspec
 	fmt.Println(").")
 }
 
-func PrintImageCompareNodeJsResults(image1 string, image1Inspect types.ImageInspect, image2 string, image2Inspect types.ImageInspect) {
-	nodeJsMajorVersion1 := GetImageNodeJsMajorVersionNumber(image1Inspect)
-	nodeJsMajorVersion2 := GetImageNodeJsMajorVersionNumber(image2Inspect)
+func PrintImageCompareLanguageResults(image1 string, image1Inspect types.ImageInspect, image2 string, image2Inspect types.ImageInspect) {
+	lang1 := DetectPrimaryLanguage(image1Inspect)
+	lang2 := DetectPrimaryLanguage(image2Inspect)
 
-	nodeJsVersionString1 := GetImageNodeJsVersionString(image1Inspect)
-	nodeJsVersionString2 := GetImageNodeJsVersionString(image2Inspect)
-
-	minorVersionImage := image1
-	minorVersionStringImage := nodeJsVersionString1
-	if nodeJsMajorVersion2 < nodeJsMajorVersion1 {
-		minorVersionImage = image2
-		minorVersionStringImage = nodeJsVersionString2
-	}
-
-	latestVersionImage := image1
-	biggerVersionStringImage := nodeJsVersionString1
-	if nodeJsMajorVersion2 > nodeJsMajorVersion1 {
-		latestVersionImage = image2
-		biggerVersionStringImage = nodeJsVersionString2
-	}
-
-	if nodeJsMajorVersion1 == nodeJsMajorVersion2 {
-		fmt.Printf("  - Both images are using the same Node.js major version: %d\n.", nodeJsMajorVersion2)
+	if lang1 == nil && lang2 == nil {
+		fmt.Println("  - No programming language runtime detected in either image.")
 		return
 	}
-	fmt.Printf("  - Image ")
-	SuccessPrintf("%s", latestVersionImage)
-	fmt.Printf(" is utilizing a ")
-	SuccessPrintf("more recent")
-	fmt.Printf(" version of Node.js compared to image ")
-	ErrorPrintf("%s", minorVersionImage)
-	fmt.Printf(" (")
-	SuccessPrintf(biggerVersionStringImage)
-	fmt.Printf(" > ")
-	ErrorPrintf(minorVersionStringImage)
-	fmt.Println(").")
+
+	if lang1 == nil {
+		fmt.Printf("  - Only image ")
+		SuccessPrintf("%s", image2)
+		fmt.Printf(" has detected language runtime: %s %s\n", lang2.Name, lang2.Version)
+		return
+	}
+
+	if lang2 == nil {
+		fmt.Printf("  - Only image ")
+		SuccessPrintf("%s", image1)
+		fmt.Printf(" has detected language runtime: %s %s\n", lang1.Name, lang1.Version)
+		return
+	}
+
+	// Comparar as linguagens
+	if lang1.Name != lang2.Name {
+		fmt.Printf("  - Images use different languages: ")
+		fmt.Printf("%s (%s) vs %s (%s)\n",
+			lang1.Name, lang1.Version,
+			lang2.Name, lang2.Version)
+		return
+	}
+
+	// Mesma linguagem, comparar versões
+	major1 := getMajorVersion(lang1.Version)
+	major2 := getMajorVersion(lang2.Version)
+
+	if lang1.Version == lang2.Version {
+		fmt.Printf("  - Both images use the same %s version: %s\n", lang1.Name, lang1.Version)
+		return
+	}
+
+	if major1 == major2 {
+		fmt.Printf("  - Both images use %s version %s (minor version may differ)\n",
+			lang1.Name, lang1.Version)
+		return
+	}
+
+	if major1 > major2 {
+		fmt.Printf("  - Image ")
+		SuccessPrintf("%s", image1)
+		fmt.Printf(" uses newer %s (", lang1.Name)
+		SuccessPrintf("%s", lang1.Version)
+		fmt.Printf(" > ")
+		ErrorPrintf("%s", lang2.Version)
+		fmt.Println(")")
+	} else {
+		fmt.Printf("  - Image ")
+		SuccessPrintf("%s", image2)
+		fmt.Printf(" uses newer %s (", lang2.Name)
+		SuccessPrintf("%s", lang2.Version)
+		fmt.Printf(" > ")
+		ErrorPrintf("%s", lang1.Version)
+		fmt.Println(")")
+	}
 }
