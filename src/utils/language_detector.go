@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/image"
 )
 
 type LanguageInfo struct {
@@ -15,7 +15,7 @@ type LanguageInfo struct {
 }
 
 // Detecta a linguagem principal da imagem
-func DetectPrimaryLanguage(imageInspect types.ImageInspect) *LanguageInfo {
+func DetectPrimaryLanguage(imageInspect image.InspectResponse) *LanguageInfo {
 	envVars := imageInspect.Config.Env
 	cmd := imageInspect.Config.Cmd
 	entrypoint := imageInspect.Config.Entrypoint
@@ -422,7 +422,7 @@ func getMinorVersion(version string) int {
 }
 
 // Função para imprimir linguagem detectada com cor
-func PrintLanguageWithColor(imageInspect types.ImageInspect) {
+func PrintLanguageWithColor(imageInspect image.InspectResponse) {
 	lang := DetectPrimaryLanguage(imageInspect)
 
 	if lang == nil {
@@ -445,7 +445,7 @@ func PrintLanguageWithColor(imageInspect types.ImageInspect) {
 }
 
 // Função para verificar se a linguagem está desatualizada
-func HasOutdatedLanguage(imageInspect types.ImageInspect) bool {
+func HasOutdatedLanguage(imageInspect image.InspectResponse) bool {
 	lang := DetectPrimaryLanguage(imageInspect)
 
 	if lang == nil {
@@ -456,7 +456,7 @@ func HasOutdatedLanguage(imageInspect types.ImageInspect) bool {
 }
 
 // Função para obter sugestões de melhoria de linguagem
-func GetLanguageImprovementSuggestions(imageInspect types.ImageInspect) []string {
+func GetLanguageImprovementSuggestions(imageInspect image.InspectResponse) []string {
 	lang := DetectPrimaryLanguage(imageInspect)
 	suggestions := []string{}
 
@@ -484,7 +484,7 @@ func GetLanguageImprovementSuggestions(imageInspect types.ImageInspect) []string
 }
 
 // Compatibilidade com código antigo
-func GetImageNodeJsMajorVersionNumber(imageInspect types.ImageInspect) int {
+func GetImageNodeJsMajorVersionNumber(imageInspect image.InspectResponse) int {
 	lang := DetectPrimaryLanguage(imageInspect)
 	if lang == nil || lang.Name != "Node.js" {
 		return 0

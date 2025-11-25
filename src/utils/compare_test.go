@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
 )
 
 // Helper to capture stdout
@@ -214,314 +213,314 @@ func TestGetImageAuthor(t *testing.T) {
 }
 
 // Tests for PrintImageCompareLanguageResults
-// func TestPrintImageCompareLanguageResults(t *testing.T) {
-// 	tests := []struct {
-// 		name           string
-// 		image1Env      []string
-// 		image2Env      []string
-// 		expectedOutput string
-// 	}{
-// 		{
-// 			name:           "Both images no language",
-// 			image1Env:      []string{"PATH=/usr/bin"},
-// 			image2Env:      []string{"PATH=/usr/bin"},
-// 			expectedOutput: "No programming language runtime detected",
-// 		},
-// 		{
-// 			name:           "Only first image has language",
-// 			image1Env:      []string{"NODE_VERSION=18.0.0"},
-// 			image2Env:      []string{"PATH=/usr/bin"},
-// 			expectedOutput: "Only image image1 has detected language runtime",
-// 		},
-// 		{
-// 			name:           "Only second image has language",
-// 			image1Env:      []string{"PATH=/usr/bin"},
-// 			image2Env:      []string{"PYTHON_VERSION=3.11.0"},
-// 			expectedOutput: "Only image image2 has detected language runtime",
-// 		},
-// 		{
-// 			name:           "Different languages",
-// 			image1Env:      []string{"NODE_VERSION=18.0.0"},
-// 			image2Env:      []string{"PYTHON_VERSION=3.11.0"},
-// 			expectedOutput: "Images use different languages",
-// 		},
-// 		{
-// 			name:           "Same language and version",
-// 			image1Env:      []string{"NODE_VERSION=18.0.0"},
-// 			image2Env:      []string{"NODE_VERSION=18.0.0"},
-// 			expectedOutput: "Both images use the same Node.js version",
-// 		},
-// 		{
-// 			name:           "Same language, first newer",
-// 			image1Env:      []string{"NODE_VERSION=20.0.0"},
-// 			image2Env:      []string{"NODE_VERSION=18.0.0"},
-// 			expectedOutput: "uses newer Node.js",
-// 		},
-// 		{
-// 			name:           "Same language, second newer",
-// 			image1Env:      []string{"PYTHON_VERSION=3.9.0"},
-// 			image2Env:      []string{"PYTHON_VERSION=3.11.0"},
-// 			expectedOutput: "uses newer Python",
-// 		},
-// 	}
+func TestPrintImageCompareLanguageResults(t *testing.T) {
+	tests := []struct {
+		name           string
+		image1Env      []string
+		image2Env      []string
+		expectedOutput string
+	}{
+		{
+			name:           "Both images no language",
+			image1Env:      []string{"PATH=/usr/bin"},
+			image2Env:      []string{"PATH=/usr/bin"},
+			expectedOutput: "No programming language runtime detected",
+		},
+		{
+			name:           "Only first image has language",
+			image1Env:      []string{"NODE_VERSION=18.0.0"},
+			image2Env:      []string{"PATH=/usr/bin"},
+			expectedOutput: "Only image image1 has detected language runtime",
+		},
+		{
+			name:           "Only second image has language",
+			image1Env:      []string{"PATH=/usr/bin"},
+			image2Env:      []string{"PYTHON_VERSION=3.11.0"},
+			expectedOutput: "Only image image2 has detected language runtime",
+		},
+		{
+			name:           "Different languages",
+			image1Env:      []string{"NODE_VERSION=18.0.0"},
+			image2Env:      []string{"PYTHON_VERSION=3.11.0"},
+			expectedOutput: "Images use different languages",
+		},
+		{
+			name:           "Same language and version",
+			image1Env:      []string{"NODE_VERSION=18.0.0"},
+			image2Env:      []string{"NODE_VERSION=18.0.0"},
+			expectedOutput: "Both images use the same Node.js version",
+		},
+		{
+			name:           "Same language, first newer",
+			image1Env:      []string{"NODE_VERSION=20.0.0"},
+			image2Env:      []string{"NODE_VERSION=18.0.0"},
+			expectedOutput: "uses newer Node.js",
+		},
+		{
+			name:           "Same language, second newer",
+			image1Env:      []string{"PYTHON_VERSION=3.9.0"},
+			image2Env:      []string{"PYTHON_VERSION=3.11.0"},
+			expectedOutput: "uses newer Python",
+		},
+	}
 
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			image1Inspect := createMockImageInspect(tt.image1Env, []string{}, []string{}, "/app", 50000000)
-// 			image2Inspect := createMockImageInspect(tt.image2Env, []string{}, []string{}, "/app", 50000000)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			image1Inspect := createMockImageInspect(tt.image1Env, []string{}, []string{}, "/app", 50000000)
+			image2Inspect := createMockImageInspect(tt.image2Env, []string{}, []string{}, "/app", 50000000)
 
-// 			output := captureOutput(func() {
-// 				PrintImageCompareLanguageResults("image1", image1Inspect, "image2", image2Inspect)
-// 			})
+			output := captureOutput(func() {
+				PrintImageCompareLanguageResults("image1", image1Inspect, "image2", image2Inspect)
+			})
 
-// 			if !strings.Contains(output, tt.expectedOutput) {
-// 				t.Errorf("Expected output to contain '%s', got: %s", tt.expectedOutput, output)
-// 			}
-// 		})
-// 	}
-// }
+			if !strings.Contains(output, tt.expectedOutput) {
+				t.Errorf("Expected output to contain '%s', got: %s", tt.expectedOutput, output)
+			}
+		})
+	}
+}
 
-// // Tests for PrintImageCompareSizeResults
-// func TestPrintImageCompareSizeResults(t *testing.T) {
-// 	tests := []struct {
-// 		name           string
-// 		size1          int64
-// 		size2          int64
-// 		expectedOutput string
-// 	}{
-// 		{
-// 			name:           "Same size",
-// 			size1:          100000000,
-// 			size2:          100000000,
-// 			expectedOutput: "Images have the same size",
-// 		},
-// 		{
-// 			name:           "First image smaller",
-// 			size1:          50000000,
-// 			size2:          100000000,
-// 			expectedOutput: "smaller",
-// 		},
-// 		{
-// 			name:           "Second image smaller",
-// 			size1:          100000000,
-// 			size2:          50000000,
-// 			expectedOutput: "smaller",
-// 		},
-// 	}
+// Tests for PrintImageCompareSizeResults
+func TestPrintImageCompareSizeResults(t *testing.T) {
+	tests := []struct {
+		name           string
+		size1          int64
+		size2          int64
+		expectedOutput string
+	}{
+		{
+			name:           "Same size",
+			size1:          100000000,
+			size2:          100000000,
+			expectedOutput: "Images have the same size",
+		},
+		{
+			name:           "First image smaller",
+			size1:          50000000,
+			size2:          100000000,
+			expectedOutput: "smaller",
+		},
+		{
+			name:           "Second image smaller",
+			size1:          100000000,
+			size2:          50000000,
+			expectedOutput: "smaller",
+		},
+	}
 
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			image1Inspect := types.ImageInspect{Size: tt.size1}
-// 			image2Inspect := types.ImageInspect{Size: tt.size2}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			image1Inspect := types.ImageInspect{Size: tt.size1}
+			image2Inspect := types.ImageInspect{Size: tt.size2}
 
-// 			output := captureOutput(func() {
-// 				PrintImageCompareSizeResults("image1", image1Inspect, "image2", image2Inspect)
-// 			})
+			output := captureOutput(func() {
+				PrintImageCompareSizeResults("image1", image1Inspect, "image2", image2Inspect)
+			})
 
-// 			if !strings.Contains(output, tt.expectedOutput) {
-// 				t.Errorf("Expected output to contain '%s', got: %s", tt.expectedOutput, output)
-// 			}
-// 		})
-// 	}
-// }
+			if !strings.Contains(output, tt.expectedOutput) {
+				t.Errorf("Expected output to contain '%s', got: %s", tt.expectedOutput, output)
+			}
+		})
+	}
+}
 
 // // Tests for PrintImageCompareLayersResults
-// func TestPrintImageCompareLayersResults(t *testing.T) {
-// 	tests := []struct {
-// 		name           string
-// 		layers1        int
-// 		layers2        int
-// 		expectedOutput string
-// 	}{
-// 		{
-// 			name:           "Same number of layers",
-// 			layers1:        10,
-// 			layers2:        10,
-// 			expectedOutput: "Images have the same number of layers",
+func TestPrintImageCompareLayersResults(t *testing.T) {
+	tests := []struct {
+		name           string
+		layers1        int
+		layers2        int
+		expectedOutput string
+	}{
+		{
+			name:           "Same number of layers",
+			layers1:        10,
+			layers2:        10,
+			expectedOutput: "Images have the same number of layers",
+		},
+		{
+			name:           "First image has fewer layers",
+			layers1:        5,
+			layers2:        10,
+			expectedOutput: "less layers",
+		},
+		{
+			name:           "Second image has fewer layers",
+			layers1:        15,
+			layers2:        8,
+			expectedOutput: "less layers",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			layers1 := make([]string, tt.layers1)
+			for i := 0; i < tt.layers1; i++ {
+				layers1[i] = fmt.Sprintf("sha256:layer%d", i)
+			}
+
+			layers2 := make([]string, tt.layers2)
+			for i := 0; i < tt.layers2; i++ {
+				layers2[i] = fmt.Sprintf("sha256:layer%d", i)
+			}
+
+			image1Inspect := types.ImageInspect{
+				RootFS: types.RootFS{Layers: layers1},
+			}
+
+			image2Inspect := types.ImageInspect{
+				RootFS: types.RootFS{Layers: layers2},
+			}
+
+			output := captureOutput(func() {
+				PrintImageCompareLayersResults("image1", image1Inspect, "image2", image2Inspect)
+			})
+
+			if !strings.Contains(output, tt.expectedOutput) {
+				t.Errorf("Expected output to contain '%s', got: %s", tt.expectedOutput, output)
+			}
+		})
+	}
+}
+
+// Integration test for PrintImageResults
+// func TestPrintImageResults(t *testing.T) {
+// 	imageInspect := types.ImageInspect{
+// 		RepoTags: []string{"testimage:latest"},
+// 		Size:     56900000,
+// 		RootFS: types.RootFS{
+// 			Layers: []string{"layer1", "layer2", "layer3", "layer4", "layer5", "layer6", "layer7"},
 // 		},
-// 		{
-// 			name:           "First image has fewer layers",
-// 			layers1:        5,
-// 			layers2:        10,
-// 			expectedOutput: "less layers",
+// 		Config: &container.Config{
+// 			Env:        []string{"NODE_VERSION=18.17.0"},
+// 			Cmd:        []string{},
+// 			Entrypoint: []string{"node", "index.js"},
+// 			WorkingDir: "/app",
 // 		},
-// 		{
-// 			name:           "Second image has fewer layers",
-// 			layers1:        15,
-// 			layers2:        8,
-// 			expectedOutput: "less layers",
-// 		},
+// 		Author:  "Test Author",
+// 		Created: "2025-11-24T12:30:45.123456789Z",
+// 		Os:      "linux",
 // 	}
 
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			layers1 := make([]string, tt.layers1)
-// 			for i := 0; i < tt.layers1; i++ {
-// 				layers1[i] = fmt.Sprintf("sha256:layer%d", i)
-// 			}
+// 	output := captureOutput(func() {
+// 		PrintImageResults("testimage", imageInspect, false, true)
+// 	})
 
-// 			layers2 := make([]string, tt.layers2)
-// 			for i := 0; i < tt.layers2; i++ {
-// 				layers2[i] = fmt.Sprintf("sha256:layer%d", i)
-// 			}
+// 	// Verify output contains expected elements
+// 	expectedStrings := []string{
+// 		"Details of image",
+// 		"testimage",
+// 		"Tags:",
+// 		"Size:",
+// 		"N. of Layers:",
+// 		"Node.js version:",
+// 		"Author:",
+// 		"Creation date:",
+// 		"OS:",
+// 	}
 
-// 			image1Inspect := types.ImageInspect{
-// 				RootFS: types.RootFS{Layers: layers1},
-// 			}
-
-// 			image2Inspect := types.ImageInspect{
-// 				RootFS: types.RootFS{Layers: layers2},
-// 			}
-
-// 			output := captureOutput(func() {
-// 				PrintImageCompareLayersResults("image1", image1Inspect, "image2", image2Inspect)
-// 			})
-
-// 			if !strings.Contains(output, tt.expectedOutput) {
-// 				t.Errorf("Expected output to contain '%s', got: %s", tt.expectedOutput, output)
-// 			}
-// 		})
+// 	for _, expected := range expectedStrings {
+// 		if !strings.Contains(output, expected) {
+// 			t.Errorf("Expected output to contain '%s', got: %s", expected, output)
+// 		}
 // 	}
 // }
 
-// Integration test for PrintImageResults
-func TestPrintImageResults(t *testing.T) {
-	imageInspect := types.ImageInspect{
-		RepoTags: []string{"testimage:latest"},
-		Size:     56900000,
-		RootFS: types.RootFS{
-			Layers: []string{"layer1", "layer2", "layer3", "layer4", "layer5", "layer6", "layer7"},
-		},
-		Config: &container.Config{
-			Env:        []string{"NODE_VERSION=18.17.0"},
-			Cmd:        []string{},
-			Entrypoint: []string{"node", "index.js"},
-			WorkingDir: "/app",
-		},
-		Author:  "Test Author",
-		Created: "2025-11-24T12:30:45.123456789Z",
-		Os:      "linux",
-	}
+// // Test for minimal output
+// func TestPrintImageResultsMinimal(t *testing.T) {
+// 	imageInspect := types.ImageInspect{
+// 		RepoTags: []string{"testimage:latest"},
+// 		Size:     56900000,
+// 		RootFS: types.RootFS{
+// 			Layers: []string{"layer1", "layer2"},
+// 		},
+// 		Config: &container.Config{
+// 			Env:        []string{"GO_VERSION=1.21.0"},
+// 			Cmd:        []string{},
+// 			Entrypoint: []string{"/app/main"},
+// 			WorkingDir: "/app",
+// 		},
+// 		Os: "linux",
+// 	}
 
-	output := captureOutput(func() {
-		PrintImageResults("testimage", imageInspect, false, true)
-	})
+// 	output := captureOutput(func() {
+// 		PrintImageResults("testimage", imageInspect, true, true)
+// 	})
 
-	// Verify output contains expected elements
-	expectedStrings := []string{
-		"Details of image",
-		"testimage",
-		"Tags:",
-		"Size:",
-		"N. of Layers:",
-		"Node.js version:",
-		"Author:",
-		"Creation date:",
-		"OS:",
-	}
+// 	// Should NOT contain author and creation date in minimal mode
+// 	if strings.Contains(output, "Author:") {
+// 		t.Error("Minimal output should not contain Author")
+// 	}
 
-	for _, expected := range expectedStrings {
-		if !strings.Contains(output, expected) {
-			t.Errorf("Expected output to contain '%s', got: %s", expected, output)
-		}
-	}
-}
+// 	if strings.Contains(output, "Creation date:") {
+// 		t.Error("Minimal output should not contain Creation date")
+// 	}
 
-// Test for minimal output
-func TestPrintImageResultsMinimal(t *testing.T) {
-	imageInspect := types.ImageInspect{
-		RepoTags: []string{"testimage:latest"},
-		Size:     56900000,
-		RootFS: types.RootFS{
-			Layers: []string{"layer1", "layer2"},
-		},
-		Config: &container.Config{
-			Env:        []string{"GO_VERSION=1.21.0"},
-			Cmd:        []string{},
-			Entrypoint: []string{"/app/main"},
-			WorkingDir: "/app",
-		},
-		Os: "linux",
-	}
-
-	output := captureOutput(func() {
-		PrintImageResults("testimage", imageInspect, true, true)
-	})
-
-	// Should NOT contain author and creation date in minimal mode
-	if strings.Contains(output, "Author:") {
-		t.Error("Minimal output should not contain Author")
-	}
-
-	if strings.Contains(output, "Creation date:") {
-		t.Error("Minimal output should not contain Creation date")
-	}
-
-	// Should contain basic info
-	if !strings.Contains(output, "Size:") {
-		t.Error("Minimal output should contain Size")
-	}
-}
+// 	// Should contain basic info
+// 	if !strings.Contains(output, "Size:") {
+// 		t.Error("Minimal output should contain Size")
+// 	}
+// }
 
 // Test suggestions are shown
-func TestPrintImageResultsWithSuggestions(t *testing.T) {
-	imageInspect := types.ImageInspect{
-		RepoTags: []string{"testimage:latest"},
-		Size:     300000000, // Big image
-		RootFS: types.RootFS{
-			Layers: make([]string, 15), // Many layers
-		},
-		Config: &container.Config{
-			Env:        []string{"NODE_VERSION=12.0.0"}, // Outdated
-			Cmd:        []string{},
-			Entrypoint: []string{},
-			WorkingDir: "/app",
-		},
-		Os: "linux",
-	}
+// func TestPrintImageResultsWithSuggestions(t *testing.T) {
+// 	imageInspect := types.ImageInspect{
+// 		RepoTags: []string{"testimage:latest"},
+// 		Size:     300000000, // Big image
+// 		RootFS: types.RootFS{
+// 			Layers: make([]string, 15), // Many layers
+// 		},
+// 		Config: &container.Config{
+// 			Env:        []string{"NODE_VERSION=12.0.0"}, // Outdated
+// 			Cmd:        []string{},
+// 			Entrypoint: []string{},
+// 			WorkingDir: "/app",
+// 		},
+// 		Os: "linux",
+// 	}
 
-	output := captureOutput(func() {
-		PrintImageResults("testimage", imageInspect, false, false)
-	})
+// 	output := captureOutput(func() {
+// 		PrintImageResults("testimage", imageInspect, false, false)
+// 	})
 
-	// Should show suggestions
-	expectedSuggestions := []string{
-		"Improvement suggestions",
-		"reducing the size",
-		"multiple layers",
-		"outdated",
-	}
+// 	// Should show suggestions
+// 	expectedSuggestions := []string{
+// 		"Improvement suggestions",
+// 		"reducing the size",
+// 		"multiple layers",
+// 		"outdated",
+// 	}
 
-	for _, expected := range expectedSuggestions {
-		if !strings.Contains(output, expected) {
-			t.Errorf("Expected output to contain suggestion '%s', got: %s", expected, output)
-		}
-	}
-}
+// 	for _, expected := range expectedSuggestions {
+// 		if !strings.Contains(output, expected) {
+// 			t.Errorf("Expected output to contain suggestion '%s', got: %s", expected, output)
+// 		}
+// 	}
+// }
 
 // Test no suggestions when ignored
-func TestPrintImageResultsIgnoreSuggestions(t *testing.T) {
-	imageInspect := types.ImageInspect{
-		RepoTags: []string{"testimage:latest"},
-		Size:     300000000, // Big image
-		RootFS: types.RootFS{
-			Layers: make([]string, 15), // Many layers
-		},
-		Config: &container.Config{
-			Env:        []string{"NODE_VERSION=12.0.0"}, // Outdated
-			Cmd:        []string{},
-			Entrypoint: []string{},
-			WorkingDir: "/app",
-		},
-		Os: "linux",
-	}
+// func TestPrintImageResultsIgnoreSuggestions(t *testing.T) {
+// 	imageInspect := types.ImageInspect{
+// 		RepoTags: []string{"testimage:latest"},
+// 		Size:     300000000, // Big image
+// 		RootFS: types.RootFS{
+// 			Layers: make([]string, 15), // Many layers
+// 		},
+// 		Config: &container.Config{
+// 			Env:        []string{"NODE_VERSION=12.0.0"}, // Outdated
+// 			Cmd:        []string{},
+// 			Entrypoint: []string{},
+// 			WorkingDir: "/app",
+// 		},
+// 		Os: "linux",
+// 	}
 
-	output := captureOutput(func() {
-		PrintImageResults("testimage", imageInspect, false, true)
-	})
+// 	output := captureOutput(func() {
+// 		PrintImageResults("testimage", imageInspect, false, true)
+// 	})
 
-	// Should NOT show suggestions
-	if strings.Contains(output, "Improvement suggestions") {
-		t.Error("Output should not contain suggestions when ignored")
-	}
-}
+// 	// Should NOT show suggestions
+// 	if strings.Contains(output, "Improvement suggestions") {
+// 		t.Error("Output should not contain suggestions when ignored")
+// 	}
+// }

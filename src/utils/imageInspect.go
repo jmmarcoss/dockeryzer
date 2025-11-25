@@ -5,15 +5,15 @@ import (
 	"math"
 	"time"
 
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/image"
 )
 
-func GetImageSizeInMBs(imageInspect types.ImageInspect) float32 {
+func GetImageSizeInMBs(imageInspect image.InspectResponse) float32 {
 	sizeInMbs := float32(imageInspect.Size) / float32(math.Pow(10.0, 6))
 	return sizeInMbs
 }
 
-func GetImageSizeString(imageInspect types.ImageInspect) string {
+func GetImageSizeString(imageInspect image.InspectResponse) string {
 	sizeUnit := "MB"
 	sizeInMbs := float32(imageInspect.Size) / float32(math.Pow(10.0, 6))
 	sizeInGbs := float32(0.0)
@@ -29,11 +29,11 @@ func GetImageSizeString(imageInspect types.ImageInspect) string {
 	return fmt.Sprintf("%.2f %s", finalSize, sizeUnit)
 }
 
-func GetImageNumberOfLayers(imageInspect types.ImageInspect) int {
+func GetImageNumberOfLayers(imageInspect image.InspectResponse) int {
 	return len(imageInspect.RootFS.Layers)
 }
 
-func GetImageFormattedCreationDate(imageInspect types.ImageInspect) string {
+func GetImageFormattedCreationDate(imageInspect image.InspectResponse) string {
 	parsedTime, err := time.Parse(time.RFC3339Nano, imageInspect.Created)
 	if err != nil {
 		fmt.Println("Failed to parsing date:", err)
@@ -43,14 +43,14 @@ func GetImageFormattedCreationDate(imageInspect types.ImageInspect) string {
 	return parsedTime.Format("02 Jan 2006")
 }
 
-func GetImageAuthor(imageInspect types.ImageInspect) string {
+func GetImageAuthor(imageInspect image.InspectResponse) string {
 	if imageInspect.Author == "" {
 		return "<none>"
 	}
 	return imageInspect.Author
 }
 
-func GetImageSizeWithColor(imageInspect types.ImageInspect) string {
+func GetImageSizeWithColor(imageInspect image.InspectResponse) string {
 	sizeInMBs := GetImageSizeInMBs(imageInspect)
 
 	fmt.Printf("  - Size: ")
@@ -65,7 +65,7 @@ func GetImageSizeWithColor(imageInspect types.ImageInspect) string {
 	return ErrorSprintf("%s", GetImageSizeString(imageInspect))
 }
 
-func GetImageLayersWithColor(imageInspect types.ImageInspect) string {
+func GetImageLayersWithColor(imageInspect image.InspectResponse) string {
 	numberOfLayers := GetImageNumberOfLayers(imageInspect)
 
 	fmt.Printf("  - N. of Layers: ")
@@ -80,7 +80,7 @@ func GetImageLayersWithColor(imageInspect types.ImageInspect) string {
 	return ErrorSprintf("%d", numberOfLayers)
 }
 
-func PrintImageResults(name string, imageInspect types.ImageInspect, minimal bool, ignoreSuggestions bool) {
+func PrintImageResults(name string, imageInspect image.InspectResponse, minimal bool, ignoreSuggestions bool) {
 	fmt.Printf("Details of image ")
 	BoldPrintf("%s:\n", name)
 	fmt.Printf("  - Tags: %s\n", imageInspect.RepoTags)
@@ -134,62 +134,15 @@ func PrintImageResults(name string, imageInspect types.ImageInspect, minimal boo
 	}
 }
 
-func PrintImageAnalyzeResults(name string, imageInspect types.ImageInspect) {
+func PrintImageAnalyzeResults(name string, imageInspect image.InspectResponse) {
 	PrintImageResults(name, imageInspect, false, false)
 }
 
-func DebugImageInfo(imageInspect types.ImageInspect) {
-	fmt.Println("\n=== DEBUG IMAGE INFO ===")
-
-	fmt.Println("\nEnvironment Variables:")
-	if len(imageInspect.Config.Env) == 0 {
-		fmt.Println("  (empty)")
-	} else {
-		for i, env := range imageInspect.Config.Env {
-			fmt.Printf("  [%d] %s\n", i, env)
-		}
-	}
-
-	fmt.Println("\nCmd:")
-	if len(imageInspect.Config.Cmd) == 0 {
-		fmt.Println("  (empty)")
-	} else {
-		for i, cmd := range imageInspect.Config.Cmd {
-			fmt.Printf("  [%d] %s\n", i, cmd)
-		}
-	}
-
-	fmt.Println("\nEntrypoint:")
-	if len(imageInspect.Config.Entrypoint) == 0 {
-		fmt.Println("  (empty)")
-	} else {
-		for i, ep := range imageInspect.Config.Entrypoint {
-			fmt.Printf("  [%d] %s\n", i, ep)
-		}
-	}
-
-	fmt.Printf("\nWorking Directory: %s\n", imageInspect.Config.WorkingDir)
-
-	fmt.Println("\nLabels:")
-	if len(imageInspect.Config.Labels) == 0 {
-		fmt.Println("  (empty)")
-	} else {
-		for key, value := range imageInspect.Config.Labels {
-			fmt.Printf("  %s = %s\n", key, value)
-		}
-	}
-
-	fmt.Println("\nImage Architecture:", imageInspect.Architecture)
-	fmt.Println("Image OS:", imageInspect.Os)
-
-	fmt.Println("\n=== END DEBUG ===")
-}
-
-func PrintImageCompareResults(name string, imageInspect types.ImageInspect) {
+func PrintImageCompareResults(name string, imageInspect image.InspectResponse) {
 	PrintImageResults(name, imageInspect, true, true)
 }
 
-func PrintImageCompareLayersResults(image1 string, image1Inspect types.ImageInspect, image2 string, image2Inspect types.ImageInspect) {
+func PrintImageCompareLayersResults(image1 string, image1Inspect image.InspectResponse, image2 string, image2Inspect image.InspectResponse) {
 	numberOfLayers1 := len(image1Inspect.RootFS.Layers)
 	numberOfLayers2 := len(image2Inspect.RootFS.Layers)
 
@@ -229,7 +182,7 @@ func PrintImageCompareLayersResults(image1 string, image1Inspect types.ImageInsp
 	fmt.Println(").")
 }
 
-func PrintImageCompareSizeResults(image1 string, image1Inspect types.ImageInspect, image2 string, image2Inspect types.ImageInspect) {
+func PrintImageCompareSizeResults(image1 string, image1Inspect image.InspectResponse, image2 string, image2Inspect image.InspectResponse) {
 	size1 := image1Inspect.Size
 	size2 := image2Inspect.Size
 
@@ -279,7 +232,7 @@ func PrintImageCompareSizeResults(image1 string, image1Inspect types.ImageInspec
 	fmt.Println(").")
 }
 
-func PrintImageCompareLanguageResults(image1 string, image1Inspect types.ImageInspect, image2 string, image2Inspect types.ImageInspect) {
+func PrintImageCompareLanguageResults(image1 string, image1Inspect image.InspectResponse, image2 string, image2Inspect image.InspectResponse) {
 	lang1 := DetectPrimaryLanguage(image1Inspect)
 	lang2 := DetectPrimaryLanguage(image2Inspect)
 

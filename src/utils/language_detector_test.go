@@ -3,20 +3,22 @@ package utils
 import (
 	"testing"
 
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
+	specs "github.com/moby/docker-image-spec/specs-go/v1"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
 // Helper function to create mock ImageInspect
-func createMockImageInspect(envVars []string, cmd []string, entrypoint []string, workingDir string, size int64) types.ImageInspect {
-	return types.ImageInspect{
-		Config: &container.Config{
-			Env:        envVars,
-			Cmd:        cmd,
-			Entrypoint: entrypoint,
-			WorkingDir: workingDir,
+func createMockImageInspect(envVars []string, cmd []string, entrypoint []string, workingDir string, size int64) image.InspectResponse {
+	return image.InspectResponse{
+		Config: &specs.DockerOCIImageConfig{
+			ImageConfig: ocispec.ImageConfig{
+				Env:        envVars,
+				Cmd:        cmd,
+				Entrypoint: entrypoint,
+				WorkingDir: workingDir,
+			},
 		},
-		Size: size,
 	}
 }
 
