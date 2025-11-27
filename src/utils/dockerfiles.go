@@ -25,7 +25,7 @@ Technical requirements:
   * Node.js projects: node:alpine or node:lts-alpine
   * Python projects: python:3.11-slim or python:alpine
   * Go projects: golang:alpine for build, alpine for runtime
-  * Java projects: eclipse-temurin:17-jdk-alpine or openjdk:17-alpine
+  * Java projects: eclipse-temurin:8u472-b08-jre-alpine-3.22 or openjdk:21-ea-slim-bookworm
   * Rust projects: rust:alpine for build, alpine for runtime
   * PHP projects: php:8.2-fpm-alpine or php:apache
   * Ruby projects: ruby:3.2-alpine
