@@ -7,6 +7,7 @@ import (
 
 var imageName string
 var ignoreComments bool
+var useLangChain bool
 
 var createCmd = &cobra.Command{
 	Use:   "create",
@@ -14,13 +15,14 @@ var createCmd = &cobra.Command{
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		// This function will be executed when the "subcommand" is called
-		functions.Create(imageName, ignoreComments)
+		functions.Create(imageName, ignoreComments, useLangChain)
 	},
 }
 
 func init() {
 	createCmd.Flags().StringVarP(&imageName, "imageName", "n", "", "Image imageName to create")
 	createCmd.Flags().BoolVarP(&ignoreComments, "ignore-comments", "i", false, "No include comments to Dockerfile")
+	createCmd.Flags().BoolVarP(&useLangChain, "langchain", "l", false, "Use LangChain to generate Dockerfile")
 
 	rootCmd.AddCommand(createCmd)
 }
