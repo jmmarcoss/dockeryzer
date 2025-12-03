@@ -19,9 +19,16 @@ type CISAnalyzer struct {
 func NewCISAnalyzer() *CISAnalyzer {
 	return &CISAnalyzer{
 		rules: []CISRule{
+			OfficialBaseImageRule{},
+			ExplicitTagRule{},
 			NoRootUserRule{},
-			NoLatestTagRule{},
+			CleanCacheRule{},
 			HealthcheckRule{},
+			DockerIgnoreRule{},
+			MinimalPortExposureRule{},
+			MultiStageBuildRule{},
+			CombinedRunCommandRule{},
+			OptimizedOrderRule{},
 		},
 	}
 }
