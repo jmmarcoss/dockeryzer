@@ -24,7 +24,7 @@ Technical requirements:
 - Use appropriate base image for the detected language/framework:
   * Node.js projects: node:alpine or node:lts-alpine
   * Python projects: python:3.12-slim or python:alpine
-  * Go projects: golang:alpine for build, alpine for runtime
+  * Go projects: golang:1.25.1 for build, alpine for runtime
   * Java or Spring Boot projects: openjdk:25-ea-slim-bookworm
   * Rust projects: rust:alpine for build, alpine for runtime
   * PHP projects: php:8.2-fpm-alpine or php:apache
