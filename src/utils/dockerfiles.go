@@ -23,9 +23,9 @@ Technical requirements:
 - Detect the primary language and framework from the provided information
 - Use appropriate base image for the detected language/framework:
   * Node.js projects: node:alpine or node:lts-alpine
-  * Python projects: python:3.11-slim or python:alpine
+  * Python projects: python:3.12-slim or python:alpine
   * Go projects: golang:alpine for build, alpine for runtime
-  * Java projects: eclipse-temurin:8u472-b08-jre-alpine-3.22 or openjdk:21-ea-slim-bookworm
+  * Java or Spring Boot projects: openjdk:25-ea-slim-bookworm
   * Rust projects: rust:alpine for build, alpine for runtime
   * PHP projects: php:8.2-fpm-alpine or php:apache
   * Ruby projects: ruby:3.2-alpine
@@ -35,6 +35,7 @@ Technical requirements:
 - Try to keep the number of layers as low as possible
 - Follow security best practices (non-root user, minimal base image)
 - Include only necessary files (use .dockerignore patterns in comments if helpful)
+- Include Health Check instruction
 - Make sure the application starts correctly
 - Copy all necessary configuration and dependency files
 - Install the correct package manager if needed (npm, yarn, pnpm, pip, poetry, cargo, composer, etc.)
